@@ -1,0 +1,264 @@
+ACC2#show run
+Building configuration...
+
+Current configuration : 5232 bytes
+!
+! Last configuration change at 21:44:32 UTC Sun Sep 29 2024
+!
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+service compress-config
+!
+hostname ACC2
+!
+boot-start-marker
+boot-end-marker
+!
+!
+logging discriminator EXCESS severity drops 6 msg-body drops EXCESSCOLL 
+logging buffered 50000
+logging console discriminator EXCESS
+enable secret 5 $1$BGcz$Ulqs.M9lIzSE4oPRIjEVU/
+!
+username admin secret 5 $1$GrtU$4W2w7VBGmLo9frs8H4f9i0
+no aaa new-model
+!
+!
+!
+!
+!
+no ip routing
+ip arp inspection vlan 10,20
+no ip icmp rate-limit unreachable
+!
+!
+!
+ip dhcp snooping vlan 10,20
+no ip dhcp snooping information option
+ip dhcp snooping
+no ip domain-lookup
+ip domain-name yairus.com
+no ip cef
+login block-for 180 attempts 4 within 120
+no ipv6 cef
+!
+!
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+!
+no cdp run
+!
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Port-channel3
+ description #ACC2 to DSW2 e2/0-1#
+ switchport trunk allowed vlan 10,20
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 99
+ switchport mode trunk
+ ip arp inspection trust
+ ip dhcp snooping trust
+!
+interface Port-channel4
+ description #ACC2 to DSW1 e3/0-1#
+ switchport trunk allowed vlan 10,20
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 99
+ switchport mode trunk
+ ip arp inspection trust
+ ip dhcp snooping trust
+!
+interface Ethernet0/0
+ description #ACC2 to USER2#
+ switchport access vlan 10
+ switchport mode access
+ switchport port-security maximum 2
+ switchport port-security violation restrict
+ switchport port-security mac-address sticky
+ switchport port-security mac-address sticky aabb.cc00.0b00
+ switchport port-security
+ duplex full
+ spanning-tree portfast edge
+ spanning-tree bpduguard enable
+!
+interface Ethernet0/1
+ switchport access vlan 88
+ switchport mode access
+ ip arp inspection limit rate 10
+ shutdown
+ ip dhcp snooping limit rate 5
+!
+interface Ethernet0/2
+ switchport access vlan 88
+ switchport mode access
+ ip arp inspection limit rate 10
+ shutdown
+ ip dhcp snooping limit rate 5
+!
+interface Ethernet0/3
+ switchport access vlan 88
+ switchport mode access
+ ip arp inspection limit rate 10
+ shutdown
+ ip dhcp snooping limit rate 5
+!         
+interface Ethernet1/0
+ switchport access vlan 88
+ switchport mode access
+ ip arp inspection limit rate 10
+ shutdown
+ ip dhcp snooping limit rate 5
+!
+interface Ethernet1/1
+ switchport access vlan 88
+ switchport mode access
+ ip arp inspection limit rate 10
+ shutdown
+ ip dhcp snooping limit rate 5
+!
+interface Ethernet1/2
+ switchport access vlan 88
+ switchport mode access
+ ip arp inspection limit rate 10
+ shutdown
+ ip dhcp snooping limit rate 5
+!
+interface Ethernet1/3
+ switchport access vlan 88
+ switchport mode access
+ ip arp inspection limit rate 10
+ shutdown
+ ip dhcp snooping limit rate 5
+!
+interface Ethernet2/0
+ switchport trunk allowed vlan 10,20
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 99
+ switchport mode trunk
+ ip arp inspection trust
+ channel-group 3 mode active
+ ip dhcp snooping trust
+!
+interface Ethernet2/1
+ switchport trunk allowed vlan 10,20
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 99
+ switchport mode trunk
+ ip arp inspection trust
+ channel-group 3 mode active
+ ip dhcp snooping trust
+!         
+interface Ethernet2/2
+ switchport access vlan 88
+ switchport mode access
+ ip arp inspection limit rate 10
+ shutdown
+ ip dhcp snooping limit rate 5
+!
+interface Ethernet2/3
+ switchport access vlan 88
+ switchport mode access
+ ip arp inspection limit rate 10
+ shutdown
+ ip dhcp snooping limit rate 5
+!
+interface Ethernet3/0
+ switchport trunk allowed vlan 10,20
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 99
+ switchport mode trunk
+ ip arp inspection trust
+ channel-group 4 mode active
+ ip dhcp snooping trust
+!         
+interface Ethernet3/1
+ switchport trunk allowed vlan 10,20
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 99
+ switchport mode trunk
+ ip arp inspection trust
+ channel-group 4 mode active
+ ip dhcp snooping trust
+!
+interface Ethernet3/2
+ switchport access vlan 88
+ switchport mode access
+ ip arp inspection limit rate 10
+ shutdown
+ ip dhcp snooping limit rate 5
+!
+interface Ethernet3/3
+ switchport access vlan 88
+ switchport mode access
+ ip arp inspection limit rate 10
+ shutdown
+ ip dhcp snooping limit rate 5
+!         
+interface Vlan1
+ no ip address
+ no ip route-cache
+ shutdown
+!
+interface Vlan10
+ no ip address
+!
+interface Vlan20
+ description # vlan 20 IT#
+ ip address 10.11.20.5 255.255.255.0
+ no ip route-cache
+!
+ip forward-protocol nd
+!
+ip tcp synwait-time 5
+ip http server
+!
+ip ssh time-out 6
+ip ssh authentication-retries 2
+ip ssh version 2
+ip ssh server algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+ip ssh client algorithm encryption aes128-ctr aes192-ctr aes256-ctr
+!
+ip access-list standard IT_SSH
+ permit 10.10.20.0 0.0.0.255
+ permit 10.11.20.0 0.0.0.255
+ permit 10.12.20.0 0.0.0.255
+!
+!
+!
+!
+!
+control-plane
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line vty 0 4
+ access-class IT_SSH in
+ exec-timeout 6 0
+ login local
+ transport input ssh
+ transport output ssh
+!
+!
+!
+end

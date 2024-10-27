@@ -1,0 +1,312 @@
+TLV-Second#show run
+Building configuration...
+
+Current configuration : 5066 bytes
+!
+version 15.5
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname TLV-Second
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret 5 $1$7u4a$ZdVkGXhb2kYj.zdwDl7ie/
+!
+no aaa new-model
+!
+!
+!
+bsd-client server url https://cloudsso.cisco.com/as/token.oauth2
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!         
+!
+!
+!
+!
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+!
+ip dhcp excluded-address 10.11.10.1 10.11.10.127
+ip dhcp excluded-address 10.11.20.1 10.11.20.127
+!
+ip dhcp pool USER
+ network 10.11.10.0 255.255.255.0
+ domain-name yairus.com
+ default-router 10.11.10.7 
+ dns-server 8.8.8.8 
+!
+ip dhcp pool IT-MGMT
+ network 10.11.20.0 255.255.255.0
+ domain-name yairus.com
+ default-router 10.11.20.7 
+ dns-server 8.8.8.8 
+!
+!
+!
+no ip domain lookup
+ip domain name yairus.com
+ip cef
+login block-for 180 attempts 4 within 120
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!         
+!
+cts logging verbose
+!
+!
+username admin secret 5 $1$5vJz$15X96ceAY/xliIPw0z6Pd1
+!
+redundancy
+!
+no cdp run
+!
+ip tcp synwait-time 5
+ip ssh time-out 6
+ip ssh authentication-retries 2
+ip ssh version 2
+! 
+!
+!
+!
+!
+crypto isakmp policy 10
+ encr aes 256
+ hash sha256
+ authentication pre-share
+ group 14
+ lifetime 8600
+crypto isakmp key cisco123 address 10.16.13.1     
+crypto isakmp key cisco123 address 10.16.43.1     
+!
+!
+crypto ipsec transform-set GRE-VPN2 esp-aes esp-sha256-hmac 
+ mode transport
+crypto ipsec transform-set GRE-VPN4 esp-aes esp-sha256-hmac 
+ mode transport
+!
+crypto ipsec profile GRE-PROFILE2
+ set transform-set GRE-VPN2 
+!
+crypto ipsec profile GRE-PROFILE4
+ set transform-set GRE-VPN4 
+!
+!
+!
+!
+!
+!
+!         
+interface Loopback0
+ ip address 10.16.33.1 255.255.255.255
+!
+interface Tunnel2
+ description # TLV-SEC to BSH tunnel 2#
+ bandwidth 4000
+ ip address 172.16.2.2 255.255.255.252
+ ip mtu 1400
+ ip ospf 1 area 0
+ tunnel source Loopback0
+ tunnel destination 10.16.13.1
+ tunnel protection ipsec profile GRE-PROFILE2
+!
+interface Tunnel4
+ description # TLV-SEC to MMR tunnel 4#
+ bandwidth 4000
+ ip address 172.16.4.2 255.255.255.252
+ ip mtu 1400
+ ip ospf 1 area 0
+ tunnel source Loopback0
+ tunnel destination 10.16.43.1
+ tunnel protection ipsec profile GRE-PROFILE4
+!         
+interface Ethernet0/0
+ description #TLV-SEC TO ISP#
+ ip address 64.100.0.10 255.255.255.252
+ ip access-group ACL_Networks in
+!
+interface Ethernet0/1
+ description #TLV-SEC TO DSW2#
+ no ip address
+!
+interface Ethernet0/1.10
+ description #VLAN USER#
+ encapsulation dot1Q 10
+ ip address 10.11.10.2 255.255.255.0
+ standby 10 ip 10.11.10.7
+ standby 10 preempt
+ standby 10 authentication md5 key-string hsrp-key
+!
+interface Ethernet0/1.20
+ description #VLAN IT#
+ encapsulation dot1Q 20
+ ip address 10.11.20.2 255.255.255.0
+ standby 20 ip 10.11.20.7
+ standby 20 preempt
+ standby 20 authentication md5 key-string hsrp-key
+!
+interface Ethernet0/1.99
+ description #NATIVE VLAN#
+ encapsulation dot1Q 99 native
+ ip address 10.11.99.2 255.255.255.0
+!
+interface Ethernet0/2
+ description #TLV-SEC TO TLV-MAIN#
+ ip address 10.11.1.2 255.255.255.252
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+interface Ethernet1/0
+ no ip address
+ shutdown
+!
+interface Ethernet1/1
+ no ip address
+ shutdown
+!         
+interface Ethernet1/2
+ no ip address
+ shutdown
+!
+interface Ethernet1/3
+ no ip address
+ shutdown
+!
+interface Ethernet2/0
+ no ip address
+ shutdown
+!
+interface Ethernet2/1
+ no ip address
+ shutdown
+!
+interface Ethernet2/2
+ no ip address
+ shutdown
+!
+interface Ethernet2/3
+ no ip address
+ shutdown 
+!
+interface Serial3/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial3/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial3/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial3/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial4/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial4/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial4/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial4/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+router ospf 1
+ router-id 2.2.2.2
+ passive-interface Ethernet0/1
+ network 10.11.10.0 0.0.0.255 area 0
+ network 10.11.20.0 0.0.0.255 area 0
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 64.100.0.9
+ip route 10.16.23.1 255.255.255.255 10.11.10.1
+!
+ip access-list standard ACL_Networks
+ permit 10.16.23.1
+ permit 10.16.13.1
+ permit 10.16.43.1
+ permit 10.16.33.1
+ permit 64.100.0.0 0.0.0.15
+ permit 10.10.0.0 0.0.31.255
+ permit 10.11.0.0 0.0.31.255
+ permit 10.12.0.0 0.0.31.255
+ permit 172.16.0.0 0.0.7.255
+ip access-list standard IT_SSH
+ permit 10.10.20.0 0.0.0.255
+ permit 10.11.20.0 0.0.0.255
+ permit 10.12.20.0 0.0.0.255
+!
+!
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line vty 0 4
+ access-class IT_SSH in
+ exec-timeout 6 0
+ login local
+ transport input ssh
+ transport output ssh
+!
+!
+end

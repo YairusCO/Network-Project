@@ -1,0 +1,306 @@
+SH#
+BSH#sh run
+Building configuration...
+
+Current configuration : 4759 bytes
+!
+version 15.5
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname BSH
+!
+boot-start-marker
+boot-end-marker
+!
+!
+enable secret 5 $1$Bxhk$EEKD5FViT2kaKjoC8hdPL1
+!
+no aaa new-model
+!
+!
+!
+bsd-client server url https://cloudsso.cisco.com/as/token.oauth2
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+!
+ip dhcp excluded-address 10.10.10.1 10.10.10.10
+ip dhcp excluded-address 10.10.20.1 10.10.20.10
+!
+ip dhcp pool USER
+ network 10.10.10.0 255.255.255.0
+ domain-name yairus.com
+ dns-server 8.8.8.8 
+ default-router 10.10.10.1 
+!
+ip dhcp pool IT-MGMT
+ network 10.10.20.0 255.255.255.0
+ domain-name yairus.com
+ dns-server 8.8.8.8 
+ default-router 10.10.20.1 
+!
+!
+!
+no ip domain lookup
+ip domain name yairus.com
+ip cef
+login block-for 180 attempts 4 within 120
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!         
+!
+!
+!
+cts logging verbose
+!
+!
+username admin secret 5 $1$CS5a$gAcLXmOxD.tU52xXXGAXK1
+!
+redundancy
+!
+no cdp run
+!
+ip tcp synwait-time 5
+ip ssh time-out 6
+ip ssh authentication-retries 2
+ip ssh version 2
+! 
+!
+!
+!
+!
+crypto isakmp policy 10
+ encr aes 256
+ hash sha256
+ authentication pre-share
+ group 14
+ lifetime 8600
+crypto isakmp key cisco123 address 10.16.23.1     
+crypto isakmp key cisco123 address 10.16.33.1     
+!
+!
+crypto ipsec transform-set GRE-VPN0 esp-aes esp-sha256-hmac 
+ mode transport
+crypto ipsec transform-set GRE-VPN2 esp-aes esp-sha256-hmac 
+ mode transport
+!
+crypto ipsec profile GRE-PROFILE0
+ set transform-set GRE-VPN0 
+!
+crypto ipsec profile GRE-PROFILE2
+ set transform-set GRE-VPN2 
+!
+!
+!
+!
+!         
+!
+!
+interface Loopback0
+ ip address 10.16.13.1 255.255.255.255
+!
+interface Tunnel1
+ description # BSH to TLV-MAIN tunnel 1#
+ bandwidth 4000
+ ip address 172.16.1.2 255.255.255.252
+ ip mtu 1400
+ ip ospf 1 area 0
+ tunnel source Loopback0
+ tunnel destination 10.16.23.1
+ tunnel protection ipsec profile GRE-PROFILE0
+!
+interface Tunnel2
+ description # BSH to TLV-SEC tunnel 2#
+ bandwidth 4000
+ ip address 172.16.2.1 255.255.255.252
+ ip mtu 1400
+ ip ospf 1 area 0
+ tunnel source Loopback0
+ tunnel destination 10.16.33.1
+ tunnel protection ipsec profile GRE-PROFILE2
+!
+interface Ethernet0/0
+ description #BSH TO ISP#
+ ip address 64.100.0.2 255.255.255.252
+ ip access-group ACL_Networks in
+!
+interface Ethernet0/1
+ description #BSH TO SW1#
+ no ip address
+!
+interface Ethernet0/1.10
+ description #USER VLAN#
+ encapsulation dot1Q 10
+ ip address 10.10.10.1 255.255.255.0
+!
+interface Ethernet0/1.20
+ description #IT VLAN#
+ encapsulation dot1Q 20
+ ip address 10.10.20.1 255.255.255.0
+!
+interface Ethernet0/1.99
+ description #NATIVE VLAN#
+ encapsulation dot1Q 99 native
+ ip address 10.10.99.1 255.255.255.0
+!
+interface Ethernet0/2
+ no ip address
+ shutdown
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+interface Ethernet1/0
+ no ip address
+ shutdown
+!
+interface Ethernet1/1
+ no ip address
+ shutdown
+!
+interface Ethernet1/2
+ no ip address
+ shutdown
+!         
+interface Ethernet1/3
+ no ip address
+ shutdown
+!
+interface Ethernet2/0
+ no ip address
+ shutdown
+!
+interface Ethernet2/1
+ no ip address
+ shutdown
+!
+interface Ethernet2/2
+ no ip address
+ shutdown
+!
+interface Ethernet2/3
+ no ip address
+ shutdown
+!
+interface Serial3/0
+ no ip address
+ shutdown 
+ serial restart-delay 0
+!
+interface Serial3/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial3/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial3/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial4/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial4/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial4/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial4/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+router ospf 1
+ router-id 3.3.3.3
+ passive-interface Ethernet0/1
+ network 10.10.10.0 0.0.0.255 area 0
+ network 10.10.20.0 0.0.0.255 area 0
+!
+ip forward-protocol nd
+!
+!         
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 64.100.0.1
+!
+ip access-list standard ACL_Networks
+ permit 10.16.23.1
+ permit 10.16.13.1
+ permit 10.16.43.1
+ permit 10.16.33.1
+ permit 64.100.0.0 0.0.0.15
+ permit 10.10.0.0 0.0.31.255
+ permit 10.11.0.0 0.0.31.255
+ permit 10.12.0.0 0.0.31.255
+ permit 172.16.0.0 0.0.7.255
+ip access-list standard IT_SSH
+ permit 10.10.20.0 0.0.0.255
+ permit 10.11.20.0 0.0.0.255
+ permit 10.12.20.0 0.0.0.255
+!
+!
+!
+!
+!         
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line vty 0 4
+ access-class IT_SSH in
+ exec-timeout 6 0
+ login local
+ transport input ssh
+ transport output ssh
+!
+!
+end
