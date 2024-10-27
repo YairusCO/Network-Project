@@ -1,0 +1,14 @@
+---
+- name: Connect and run configuration file
+  hosts: cisco_device
+  gather_facts: no
+  vars_prompt:
+    - name: "config_file"
+      prompt: "Enter the configuration file path"
+      private: no
+
+  tasks:
+    - name: Load configuration from file
+      cisco.ios.ios_config:
+        src: "{{ config_file }}"
+        save_when: changed

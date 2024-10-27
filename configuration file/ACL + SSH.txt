@@ -1,0 +1,37 @@
+ip domain-name yairus.com
+crypto key generate rsa modulus 1024
+ip ssh version 2
+ip ssh authentication-retries 2
+ip ssh time-out 6 
+username admin secret admin
+login block-for 180 attempts 4 within 120
+line vty 0 4
+transport input ssh
+transport output ssh
+login local
+exec-timeout 6
+no ip domain-lookup
+
+ip access-list standard IT_SSH
+description #IT ACCESS TO SSH#
+permit 10.10.20.0 0.0.0.255
+permit 10.11.20.0 0.0.0.255
+permit 10.12.20.0 0.0.0.255
+
+line vty 0 4
+access-class IT_SSH in
+
+ip access-list standard ACL_Networks
+description #ACL_Networks#
+ permit 64.100.0.0 0.0.0.15
+ permit 10.10.0.0 0.0.31.255
+ permit 10.11.0.0 0.0.31.255
+ permit 10.12.0.0 0.0.31.255
+ permit 10.16.13.1 0.0.0.0
+ permit 10.16.23.1 0.0.0.0
+ permit 10.16.33.1 0.0.0.0
+ permit 10.16.43.1 0.0.0.0
+ permit 172.16.0.0 0.0.7.255
+
+ interface e0/0
+ip access-group ACL_Networks in

@@ -1,0 +1,87 @@
+hostname TLV-Main
+enable secret admin
+interface e0/1
+description #TLV-SEC TO DSW2#
+duplex full 
+no shutdown
+
+interface e0/1.10
+description #vlan 10 user#
+encapsulation dot1q 10
+ip address 10.11.10.1 255.255.255.0 
+standby 10 ip 10.11.10.7
+standby 10 priority 110
+standby 10 preempt
+standby 10 authentication md5 key-string hsrp-key
+
+interface e0/1.20
+description #vlan 20 IT#
+encapsulation dot1q 20
+ip address 10.11.20.1 255.255.255.0 
+standby 20 ip 10.11.20.7
+standby 20 priority 110
+standby 20 preempt
+standby 20 authentication md5 key-string hsrp-key
+
+interface e0/1.99
+description #native vlan#
+encapsulation dot1q 99 native
+ip address 10.11.99.1 255.255.255.0 
+exit
+ip dhcp excluded-address 10.11.10.1 10.11.10.10
+ip dhcp excluded-address 10.11.10.128 10.11.10.254
+ip dhcp excluded-address 10.11.20.1 10.11.20.10
+ip dhcp excluded-address 10.11.20.128 10.11.20.254
+
+ip dhcp pool USER
+network 10.11.10.0 255.255.255.0
+domain-name yairus.com
+default-router 10.11.10.7
+dns-server 8.8.8.8
+
+ip dhcp pool IT-MGMT
+network 10.11.20.0 255.255.255.0
+domain-name yairus.com
+default-router 10.11.20.7
+dns-server 8.8.8.8
+exit
+
+ip sla 1
+icmp-echo 64.100.0.6 
+frequency 10
+timeout 1000
+exit
+
+ip sla schedule 1 life forever start-time now
+
+track 10 ip sla 1 reachability
+interface e0/1.10
+standby 10 track 10 decrement 20
+interface e0/1.20
+standby 20 track 10 decrement 20
+exit
+
+
+interface e0/2
+description #TLV-MAIN TO TLV-SEC#
+ip address 10.11.1.1 255.255.255.252
+no shutdown
+
+interface e0/0
+description #TLV-MAIN TO ISP#
+ip address 64.100.0.6  255.255.255.252
+no shutdown
+
+interface loopback 0
+ip address 10.16.23.1 255.255.255.255
+exit
+
+ip route 0.0.0.0 0.0.0.0 64.100.0.5
+ip route 10.16.33.1 255.255.255.255 10.11.10.2
+
+
+router ospf 1
+router-id 1.1.1.1
+network 10.11.10.0 0.0.0.255 area 0 
+network 10.11.20.0 0.0.0.255 area 0
+passive-interface e0/1

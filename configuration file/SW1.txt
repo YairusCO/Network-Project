@@ -1,0 +1,55 @@
+hostname SW1
+no ip routing 
+enable secret admin
+
+vlan 10
+name User
+vlan 20
+name IT-MGMT
+vlan 88
+name Block
+vlan 99 
+name Native
+
+interface vlan 20
+description #VLAN 20#
+ip address 10.10.20.2 255.255.255.0
+no shutdown
+ip default-gateway 10.10.20.7
+
+
+interface e0/0
+description #SW1 TO BSH#
+switchport trunk encapsulation dot1q
+switchport mode trunk
+switchport trunk allowed vlan 10,20
+switchport trunk native vlan 99
+no shutdown
+
+ip dhcp snooping  
+no ip dhcp snooping information option 
+ip dhcp snooping vlan 10,20
+ip arp inspection vlan 10,20
+
+interface e0/0
+ip dhcp snooping trust
+ip arp inspection trust
+
+interface e0/1
+description #SW1 TO USER#
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security violation restrict
+ switchport port-security mac-address sticky
+switchport mode access 
+ switchport access vlan 10
+ no shutdown
+spanning-tree portfast 
+spanning-tree bpduguard enable 
+
+interface range e0/2-3,e1/0-3,e2/0-3,e3/0-3
+switchport mode access
+switchport access vlan 88
+shutdown
+ip dhcp snooping limit rate 5
+ip arp inspection limit rate 10

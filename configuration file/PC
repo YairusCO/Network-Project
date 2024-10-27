@@ -1,0 +1,5 @@
+no ip routing
+interface e0/0
+duplex full
+no shutdown
+ip address dhcp

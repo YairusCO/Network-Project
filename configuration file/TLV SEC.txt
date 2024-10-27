@@ -1,0 +1,70 @@
+hostname TLV-Second
+enable secret admin
+
+interface e0/1
+description #TLV-SEC TO DSW2#
+duplex full 
+no shutdown
+ 
+interface e0/1.10
+description #VLAN USER#
+encapsulation dot1q 10
+ip address 10.11.10.2 255.255.255.0 
+standby 10 ip 10.11.10.7
+standby 10 priority 100
+standby 10 preempt
+standby 10 authentication md5 key-string hsrp-key
+
+interface e0/1.20
+description #VLAN IT#
+encapsulation dot1q 20
+ip address 10.11.20.2 255.255.255.0 
+standby 20 ip 10.11.20.7
+standby 20 priority 100
+standby 20 preempt
+standby 20 authentication md5 key-string hsrp-key 
+
+interface e0/1.99
+description #NATIVE VLAN#
+encapsulation dot1q 99 native
+ip address 10.11.99.2 255.255.255.0 
+exit
+
+ip dhcp excluded-address 10.11.10.1 10.11.10.127
+ip dhcp excluded-address 10.11.20.1 10.11.20.127
+
+ip dhcp pool USER
+network 10.11.10.0 255.255.255.0
+domain-name yairus.com
+default-router 10.11.10.7
+dns-server 8.8.8.8
+
+ip dhcp pool IT-MGMT
+network 10.11.20.0 255.255.255.0
+domain-name yairus.com
+default-router 10.11.20.7
+dns-server 8.8.8.8
+
+
+interface e0/2
+description #TLV-SEC TO TLV-MAIN#
+duplex full
+ip address 10.11.1.2 255.255.255.252
+no shutdown
+
+interface e0/0
+description #TLV-SEC TO ISP#
+ip address 64.100.0.10  255.255.255.252
+no shutdown
+
+interface loopback 0
+ip address 10.16.33.1 255.255.255.255
+exit
+ip route 0.0.0.0 0.0.0.0 64.100.0.9
+ip route 10.16.23.1 255.255.255.255 10.11.10.1
+
+router ospf 1
+router-id 2.2.2.2
+network 10.11.10.0 0.0.0.255 area 0 
+network 10.11.20.0 0.0.0.255 area 0
+passive-interface e0/1

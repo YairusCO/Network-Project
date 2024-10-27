@@ -1,0 +1,28 @@
+crypto isakmp policy 10
+encryption aes 256 
+hash sha256
+group 14
+lifetime 8600
+authentication pre-share 
+exit
+
+crypto isakmp key cisco123 address 10.16.13.1
+
+crypto ipsec transform-set GRE-VPN0 esp-aes esp-sha256-hmac 
+mode transport
+exit
+
+crypto ipsec profile GRE-PROFILE0
+set transform-set GRE-VPN0 
+exit
+
+interface tunnel 1
+description #TLV-MAIN TO BSH tunnel 1#
+
+ip ospf 1 area 0
+tunnel source loopback 0
+tunnel destination  10.16.13.1
+ip address 172.16.1.1 255.255.255.252
+bandwidth 4000
+ip mtu 1400
+tunnel protection ipsec profile GRE-PROFILE0
